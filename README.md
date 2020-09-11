@@ -65,7 +65,7 @@ opencv-python >= 4.3
 ├─unet
 │  │  unet_model.py          # store basic model
 │  │  unet_parts.py          # basic part of model
-│  │
+│  
 └─utils
     │  dataset.py            # dataloader
     │  dice_loss.py 
@@ -91,9 +91,9 @@ Add notes about how to use this code.
 
 ## ✍️ Authors <a name = "authors"></a>
 
-- Yunlong Zhang
+- [@dazhangyu123](https://github.com/dazhangyu123)
 - [@Au3C2](https://github.com/Au3C2)
-- Yihong Zhuang
+- [utdawn](https://github.com/utdawn)
 
 ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 
