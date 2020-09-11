@@ -36,8 +36,8 @@ def train_net(reconstucter,
               save_cp=True,
               img_scale=0.5):
 
-    train_set = BrainDataset(train_list,has_mean=True) #test
-    val_set = BrainDataset(val_list)
+    train_set = BrainDataset(train_list,has_mean=True) #
+    val_set = BrainDataset(val_list)    #test
     test_set = BrainDataset(val_list,test_list)
     n_val = len(val_set)
     n_train = len(train_set)
