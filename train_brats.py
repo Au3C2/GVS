@@ -12,10 +12,8 @@ from tqdm import tqdm
 import cv2
 import time
 
-# from eval import eval_net
 from unet.unet_model import *
 from predict_brats import predict
-# from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BrainDataset, PolarDataset
 from torch.utils.data import DataLoader, random_split
 from torch.nn import functional as F
@@ -24,7 +22,6 @@ from utils.FocalLoss import FocalWithLogitsLoss
 from utils.init_logging import init_logging
 
 dir_checkpoint = 'checkpoints/'
-
 train_list = 'data/train_brats_only_tumor.txt'
 val_list = 'data/val_brats.txt'
 test_list = 'data/test_brats.txt'
@@ -39,7 +36,7 @@ def train_net(reconstucter,
               save_cp=True,
               img_scale=0.5):
 
-    train_set = BrainDataset(train_list,has_mean=True)
+    train_set = BrainDataset(train_list,has_mean=True) #test
     val_set = BrainDataset(val_list)
     test_set = BrainDataset(val_list,test_list)
     n_val = len(val_set)
