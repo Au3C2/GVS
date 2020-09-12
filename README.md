@@ -67,7 +67,6 @@ opencv-python >= 4.3
 
 ## 🎈 Usage <a name="usage"></a>
 
-Add notes about how to use this code.
 
 * Prepare your LiTS/BraTS Dataset by following step:
   
