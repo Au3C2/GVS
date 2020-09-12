@@ -14,11 +14,10 @@ import time
 
 from unet.unet_model import *
 from predict_brats import predict
-from utils.dataset import BrainDataset, PolarDataset
-from torch.utils.data import DataLoader, random_split
+from utils.dataset import BrainDataset
+from torch.utils.data import DataLoader
 from torch.nn import functional as F
 from dice_loss import dice_coeff
-from utils.FocalLoss import FocalWithLogitsLoss
 from utils.init_logging import init_logging
 
 dir_checkpoint = 'checkpoints/'
@@ -45,8 +44,6 @@ def train_net(reconstucter,
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True, drop_last=True)
-    global_step = 0
-    batch, h, w = batch_size, 240, 240
     logger.info(f'''Starting training:
         Starting time    {starttime_r}
         Epochs:          {epochs}
@@ -69,7 +66,6 @@ def train_net(reconstucter,
     bce_loss = nn.BCEWithLogitsLoss()
     ce_loss = nn.CrossEntropyLoss()
     mse_loss = nn.MSELoss(reduction='none')
-    focal_loss = FocalWithLogitsLoss(alpha=2,gamma=0.75)
     sigmoid = nn.Sigmoid()
     best_dice = 0
     for epoch in range(epochs):
@@ -80,8 +76,7 @@ def train_net(reconstucter,
         loss3 = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img',ncols=120,ascii=True) as pbar:
             for i,(img, seg, seg_tumor, [name,slice_idx], [mean,std]) in enumerate(train_loader):
-                if img.shape[0] != batch_size :
-                    continue
+                batch, h, w = img.shape[0], img.shape[-2], img.shape[-1]
                 img = Variable(img.unsqueeze(dim=1).to(device=device, dtype=torch.float32))
                 seg = seg.to(device=device, dtype=torch.long)
                 seg_tumor = seg_tumor.to(device=device, dtype=torch.long)
@@ -168,16 +163,14 @@ if __name__ == '__main__':
     starttime = time.strftime("%Y-%m-%d_%H-%M-%S", t)
     starttime_r = time.strftime("%Y/%m/%d %H:%M:%S", t) #readable time
 
-    # logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     logger = init_logging(starttime)
-    # log_fp = open('./log/%s.txt'%(starttime),'w')
     args = get_args()
     lambd = eval(args.lambd)
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.benchmark = True # faster convolutions, but more memory
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logger.info(f'Using device {device}')
-    # Change here to adapt to your data
+    # Change here to adapt to your data 
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
     #   - For 1 class and background, use n_classes=1
@@ -198,8 +191,6 @@ if __name__ == '__main__':
 
     reconstucter.to(device=device)
     segmenter.to(device=device)
-    # faster convolutions, but more memory
-    # cudnn.benchmark = True
 
     try:
         train_net(reconstucter=reconstucter,

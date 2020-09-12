@@ -1,26 +1,21 @@
 import argparse
 import logging
 import os
+import time
 
+import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
-import cv2
-from torchvision import transforms
-from utils.dataset import BrainDataset
 from torch.utils.data import DataLoader
-
-from unet.unet_model import *
-from utils.data_vis import plot_img_and_mask
-from utils.dataset import BasicDataset
-from utils.ms_ssim import MS_SSIM
-from dice_loss import dice_coeff
 from tqdm import tqdm
+
 import prettytable as pt
+from dice_loss import dice_coeff
+from unet.unet_model import *
+from utils.dataset import BrainDataset
 from utils.init_logging import init_logging
-import time
-# from utils.Evalution_Vessel import Evalution_Vessel
+from utils.ms_ssim import MS_SSIM
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images',
@@ -45,7 +40,7 @@ def predict(args,
             segmenter=None,
             test_loader=None):
     
-    #读入val和test的case名称
+    #read the name of val/test
     with open('data/test_brats_list.txt','r') as fp:
         test_case_list = fp.readlines()
     for i in range(len(test_case_list)):
@@ -55,7 +50,6 @@ def predict(args,
     for i in range(len(val_case_list)):
         val_case_list[i] = val_case_list[i].strip()
 
-    in_files = args.input
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -81,7 +75,6 @@ def predict(args,
     test_list_fp = open('%s/test.txt'%(output_npy),'w')
     val_list_fp = open('%s/val.txt'%(output_npy),'w')
 
-    # if test_loader == None:
     test_list = './data/test_brats.txt'
     val_list = './data/val_brats.txt'
     test_set = BrainDataset(test_list,val_list,has_mean=True)
@@ -109,7 +102,8 @@ def predict(args,
     reconstucter.eval()
     segmenter_base.eval()
     segmenter.eval()
-    #找到全局diff的最大最小值
+
+    #find the globe min/max of diff
     diff_min = 0
     diff_max = 0
     ms_ssim = MS_SSIM(data_range=1.0,channel=1).to(device=device)
@@ -121,8 +115,7 @@ def predict(args,
             std = std.unsqueeze(dim=1).to(device=device, dtype=torch.float32)
 
             with torch.no_grad():
-                img_no_tumor = reconstucter(img) #shape(batch,1,512,512)
-                # seg_pred = segmenter(img_no_tumor)
+                img_no_tumor = reconstucter(img)
             img = img * std + mean
             img_no_tumor = img_no_tumor * std + mean
 
@@ -140,9 +133,7 @@ def predict(args,
     print('min:{}, max:{}'.format(diff_min,diff_max))
     diff_max = np.ones_like(diff) * diff_max
     diff_min = np.ones_like(diff) * diff_min
-    
-    #已找到全局最大最小值
-    case_psnr = {}     
+   
     with tqdm(total=n_test//args.batch_size, desc='Test Round', unit='batch',ncols=120,ascii=True) as pbar:
         for i,(img, seg, seg_tumor, [name,slice_idx], [mean,std]) in enumerate(test_loader):
             batch_size, h, w = img.shape[0], img.shape[-2], img.shape[-1]
@@ -156,23 +147,14 @@ def predict(args,
             seg_tumor = seg_tumor.unsqueeze(dim=1).numpy().astype(np.uint8)
             seg_for_save = seg.numpy().astype(np.uint8)
             with torch.no_grad():
-                img_no_tumor = reconstucter(img) #shape(batch,1,512,512)
+                img_no_tumor = reconstucter(img)
                 seg_pred = segmenter(img_no_tumor)
             img_for_save = (img_no_tumor*brain_mask).squeeze().cpu().numpy().astype(np.float32)
             
             img = img * std + mean
             img_no_tumor = img_no_tumor * std + mean
-            
-            
-            ####### 计算psnr #######
-            mse = ((img-img_no_tumor)**2 * seg_tumor_neg).mean(dim=-1).mean(dim=-1).mean(dim=-1)
-            psnr = 10*torch.log10(250*250/mse).cpu().numpy().astype(np.float32)
-            ####### 计算psnr #######
-            # _, _, specificity, sensitivity, _ = Evalution_Vessel(seg_pred,)
-            # seg_pred = torch.sigmoid(seg_pred)
-            # seg_pred = torch.where(seg_pred>0.5,torch.ones_like(seg_pred)*255,torch.zeros_like(seg_pred))
+                      
             seg_pred = softmax(seg_pred).argmax(dim=1).squeeze().cpu().numpy().astype(np.uint8)
-            # seg_for_save = seg_tumor.numpy().astype(np.uint8)
 
             diff = img - img_no_tumor #diffrence between img and img_no_tumor
             diff = diff.cpu().numpy().astype(np.int32)
@@ -184,7 +166,7 @@ def predict(args,
             img = img.cpu().numpy().astype(np.uint8)
             seg_tumor = np.concatenate((seg_tumor,np.zeros_like(seg_tumor)),axis=3)
             for b in range(batch_size):        
-                #存储测试完的img与seg为npy格式   
+                #save img/seg as npy   
                 slice_pth = '%s/%s'%(output_npy,name[b])
                 if not os.path.exists(slice_pth):
                     os.mkdir(slice_pth)
@@ -193,19 +175,15 @@ def predict(args,
                     test_list_fp.write('%s/%s.npy\n'%(slice_pth,slice_idx[b]))
                 else:
                     val_list_fp.write('%s/%s.npy\n'%(slice_pth,slice_idx[b]))
-                #存储结束
-                #以case为单位创建文件夹
+
+                # mkidir by case
                 case_path = '%s/%s'%(output_img,name[b])
                 if not os.path.exists(case_path):
                     os.mkdir(case_path)
-                if name[b] not in case_psnr:
-                    case_psnr[name[b]] = [psnr[b]]
-                else:
-                    case_psnr[name[b]].append(psnr[b])
                 
                 mask_gt = np.zeros((3,h,2*w),dtype=np.uint8)
-                mask_gt[1] = np.where(seg_tumor[b][0]==1,165,0) #G通道 
-                mask_gt[2] = np.where(seg_tumor[b][0]==1,255,0) #B通道
+                mask_gt[1] = np.where(seg_tumor[b][0]==1,165,0) # G channal
+                mask_gt[2] = np.where(seg_tumor[b][0]==1,255,0) # B channal
 
                 tmp = (cv2.cvtColor(img[b][0],cv2.COLOR_GRAY2RGB)).transpose((2,0,1))
                 tmp_gt = 0.05*mask_gt + tmp
@@ -218,8 +196,6 @@ def predict(args,
                 total = np.concatenate((tmp_gt,mask_and_diff),axis=1)
                 cv2.imwrite('{}/{}.jpg'.format(case_path,slice_idx[b]),total.transpose((1,2,0)))
                 cv2.imwrite('{}/{}/{}_diff.jpg'.format(output,name[b],slice_idx[b]),tmp_diff[0])
-            # if i == 10:
-            #     break
             pbar.update()
 
     test_set = BrainDataset('data/test_brats.txt',has_mean=True)
@@ -227,6 +203,7 @@ def predict(args,
     test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True)
     
     case_ssim = {}
+    case_psnr = {}  
     seg_base_tumor_sum = 0
     seg_recs_tumor_sum = 0   
     with tqdm(total=n_test//args.batch_size, desc='Eval Round', unit='batch',ncols=120,ascii=True) as pbar:
@@ -247,20 +224,19 @@ def predict(args,
             img = img * std + mean
             img_no_tumor = img_no_tumor * std + mean
             
-            ####### 计算healthiness #######
+            ####### cal healthiness #######
             ones = torch.ones((batch_size,h,w)).to(device=device, dtype=torch.float32)
             zeros = torch.zeros((batch_size,h,w)).to(device=device, dtype=torch.float32)
             seg_base = softmax(seg_base).argmax(dim=1)
             seg_recs = softmax(seg_recs).argmax(dim=1)
-            # seg_base_tumor = torch.where(seg_base>0.5,ones,zeros)
-            # seg_recs_tumor = torch.where(seg_recs>0.5,ones,zeros)
-            # seg_base = torch.sigmoid(seg_base)
-            # seg_recs = torch.sigmoid(seg_recs)
-            # seg_base_tumor = torch.where(seg_base>0.5,ones,zeros)
-            # seg_recs_tumor = torch.where(seg_recs>0.5,ones,zeros)
             seg_base_tumor_sum += seg_base.sum()
             seg_recs_tumor_sum += seg_recs.sum()
-            ####### 计算healthiness #######
+            ####### cal healthiness #######
+
+            ####### cal psnr #######
+            mse = ((img-img_no_tumor)**2 * seg_tumor_neg).mean(dim=-1).mean(dim=-1).mean(dim=-1)
+            psnr = 10*torch.log10(250*250/mse).cpu().numpy().astype(np.float32)
+            ####### calpsnr #######
 
             seg_base_for_show = seg_base* 255
             seg_recs_for_show = seg_recs* 255
@@ -273,25 +249,26 @@ def predict(args,
             seg_cat = seg_cat.squeeze().cpu().numpy().astype(np.uint8)
 
             for b in range(batch_size):   
-                pred = ((img_no_tumor[b]*seg_tumor_neg[b])/1470).unsqueeze(dim=0) #这里要修改，主要是最小值最大值变化了
+                pred = ((img_no_tumor[b]*seg_tumor_neg[b])/1470).unsqueeze(dim=0) 
                 target = ((img[b]*seg_tumor_neg[b])/1470).unsqueeze(dim=0)
                 slice_ssim = (ms_ssim(pred,target)).cpu().numpy().astype(np.float32)
+                
                 if name[b] not in case_ssim:
                     case_ssim[name[b]] = [slice_ssim[0]]
                 else:
                     case_ssim[name[b]].append(slice_ssim[0])
+                    
+                if name[b] not in case_psnr:
+                    case_psnr[name[b]] = [psnr[b]]
+                else:
+                    case_psnr[name[b]].append(psnr[b])
+
                 img_cat[b] = ((img_cat[b] + abs(img_min[b]))/(img_max[b]+abs(img_min[b]))*255)
                 img_for_save = np.concatenate((img_cat[b],seg_cat[b]),axis=0).astype(np.uint8)
-                # img_for_save[] = img_for_save.cpu().numpy()
-                #以case为单位创建文件夹
                 case_path = '%s/%s'%(output_eval,name[b])
                 if not os.path.exists(case_path):
                     os.mkdir(case_path)
                 cv2.imwrite('{}/{}.jpg'.format(case_path,slice_idx[b]),img_for_save)
-
-                
-            # if i == 100:
-            #     break
             pbar.update()
 
     total = 0
@@ -308,19 +285,16 @@ def predict(args,
     
     test_score = total/n_case
     healthiness = 1 - seg_recs_tumor_sum.type(torch.float) / seg_base_tumor_sum.type(torch.float)
-    logger.info('Avr PSNR: {:.4f}, SSIM: {:.4f}, Healthiness: {:.4f}'.format(test_score,tot_ssim/n_case,healthiness))          
-    # tb = pt.PrettyTable(['Case','PSNR','SSIM','Case','PSNR','SSIM'])
-    # for key in keys:
-    #     tb.add_row([key[4:],round(case_psnr[key],4),round(case_ssim[key],4),round(case_heal[key],4)])
-    # print(tb)
+    logger.info('Avr PSNR: {:.4f}, SSIM: {:.4f}, Healthiness: {:.4f}'.format(test_score,tot_ssim/n_case,healthiness))     
+    info = '\n'     
     for m in range(n_case//4 +1 ): #每行打印四个
         for n in range(4):
-            try:
-                key = keys[m*4+n]
-                print('{:<20s}: {:.4f}, {:.4f}; '.format(key,case_psnr[key],case_ssim[key]),end='')
-            except:
-                continue
-        print('')
+            if m*4+n >= n_case:
+                break
+            key = keys[m*4+n]
+            info += '{:<20s}: {:.4f}, {:.4f}; '.format(key,case_psnr[key],case_ssim[key])
+        info += '\n'
+        logger.info(info)
     test_list_fp.close()
     val_list_fp.close()
 
@@ -328,12 +302,5 @@ if __name__ == "__main__":
     args = get_args()
     logger = init_logging(starttime=time.strftime("%Y-%m-%d_%H-%M-%S",time.localtime()))
     starttime='2020-08-29_10-47-27'
-    # starttime='2020-09-07_19-19-10'
-    # try:
+
     predict(args,logger=logger,starttime=starttime)
-    # except KeyboardInterrupt:
-    #     # pass
-    #     try:
-    #         os.remove(f'./log/{starttime}.txt')
-    #     except:
-    #         pass

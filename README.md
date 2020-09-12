@@ -5,18 +5,7 @@
 
 <h1 align="center">Generator Versus Segmentor</h1>
 
-<!-- <div align="center">
-
-[![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![GitHub Issues](https://img.shields.io/github/issues/kylelobo/The-Documentation-Compendium.svg)](https://github.com/kylelobo/The-Documentation-Compendium/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/kylelobo/The-Documentation-Compendium.svg)](https://github.com/kylelobo/The-Documentation-Compendium/pulls)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
-
-</div> -->
-
-
-
-<p align="center"> An implementation for 'Generator Versus Segmentor: Pseudo-healthy Synthesis'.
+<p align="center"> An implementation for <strong>Generator Versus Segmentor: Pseudo-healthy Synthesis</strong>
 </p>
 
 ## 📝 Table of Contents
@@ -29,11 +18,12 @@
 
 ## 🧐 About <a name = "about"></a>
 
-This is an implementation for 'Generator Versus Segmentor: Pseudo-healthy Synthesis'.[[arXiv]](https://arxiv.org/abs/2005.08104)
+This is an implementation for <strong>Generator Versus Segmentor: Pseudo-healthy Synthesis</strong>. 
+<!-- [[arXiv]](https://arxiv.org/abs/2005.08104) -->
 
-<p align="center"> Abstract</p>
+<p align="center" > <strong>Abstract</strong></p>
 
-<p align="justify">In this paper, we discuss the problems of these approaches, which are the style transfer and artifacts respectively. To address these problems, we consider the local differences between the lesions and normal tissue. To achieve this, we propose an adversarial process that alternatively trains a generator and a segmentor. The segmentor is trained to distinguish the synthetic lesions (i.e. the region in synthetic images corresponding to the lesions in the pathological ones) from the normal tissue, while the generator is trained to deceive the segmentor and preserve the normal tissue at the same time. Qualitative and quantitative experimental results on public datasets of BraTS and LiTS demonstrate that the proposed method outperforms state-oftheart methods by preserving the style and removing the artifacts.</p>
+<p align="justify">In this paper, we discuss the problems of style transfer and artifacts respectively. To address these problems, we consider the local differences between the lesions and normal tissue. To achieve this, we propose an adversarial process that alternatively trains a generator and a segmentor. The segmentor is trained to distinguish the synthetic lesions (i.e. the region in synthetic images corresponding to the lesions in the pathological ones) from the normal tissue, while the generator is trained to deceive the segmentor and preserve the normal tissue at the same time. Qualitative and quantitative experimental results on public datasets of BraTS and LiTS demonstrate that the proposed method outperforms state-oftheart methods by preserving the style and removing the artifacts.</p>
 
 
 <div align="center"><img src="./data/imgs/result2.jpg" width="75%"></div>
@@ -42,7 +32,7 @@ This is an implementation for 'Generator Versus Segmentor: Pseudo-healthy Synthe
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See [deployment](#deployment) for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -58,7 +48,7 @@ opencv-python >= 4.3
 
 ```
 │  predict_lits.py           # evaluate a model by some index, and extract images
-│  README.md
+│  README.md                 # this file
 │  train_brats.py            # our main code, tarin our model on BraTS
 │
 ├─unet
@@ -67,10 +57,10 @@ opencv-python >= 4.3
 │  
 └─utils
     │  dataset.py            # dataloader
-    │  dice_loss.py 
+    │  dice_loss.py          # calculate dice between two seg labels
     │  init_logging.py       # initial a logger to write a log
-    │  ms_ssim.py
-    │  nii2npy_brats.py    # split .nii in to .npy to train 
+    │  ms_ssim.py            # calculate ms-ssim between two images
+    │  nii2npy_brats.py      # split .nii in to .npy to train 
     │  split_cases_brats.py  # split cases into train/val/test set
 
 ```
@@ -81,7 +71,7 @@ Add notes about how to use this code.
 
 * Prepare your LiTS/BraTS Dataset by following step:
   
-  * Download LiTS/BraTS Dataset to your hardrive
+  * Download LiTS/BraTS Dataset to your harddrive
   * Run ```./utils/nii2npy.py```to split into slices
   * Run ```./utils/split_cases_brats.py``` to split slices into train/val/test set, and it will generrate a text like ```./data/train_brats.txt```
 * Then you can train you model by running ```train_brats.py```
@@ -96,17 +86,15 @@ Add notes about how to use this code.
 
 ## 🎉 Acknowledgements <a name = "acknowledgement"></a>
 
-- Hat tip to anyone whose code was used
-- Inspiration
-- References
+- Spetial thanks to [@milesial](https://github.com/milesial). Part of this work is based on [Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
 
-## Citation
+<!-- ## Citation
 We hope that you find this work useful. If you would like to acknowledge us, please, use the following citation:
 ```
-@inproceedings{Araslanov:2020:WSEG,
-  title     = {Single-Stage Semantic Segmentation from Image Labels},
-  author    = {Araslanov, Nikita and and Roth, Stefan},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+@inproceedings{,
+  title     = {Generator Versus Segmentor: Pseudo-healthy Synthesis},
+  author    = {Yunlong Zhang, Xin Lin, Yihong Zhuang},
+  booktitle = {},
   year = {2020}
 }
-```
+``` -->

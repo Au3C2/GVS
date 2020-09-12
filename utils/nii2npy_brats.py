@@ -8,28 +8,10 @@ from skimage import morphology,measure
 from tqdm import tqdm
 import scipy.ndimage as ndimage
 
-down_scale = 0.5  # 横断面降采样因子
-expand_slice = 20  # 仅使用包含肝脏以及肝脏上下20张切片作为训练样本
-slice_thickness = 1  # 将所有数据在z轴的spacing归一化到1mm
-
-def get_boundingbox(mask):
-        # mask.shape = [image.shape[0], image.shape[1], classnum]        
-        # 删掉小于10像素的目标
-        mask_without_small = morphology.remove_small_objects(mask,min_size=10,connectivity=2)
-        # mask_without_small = mask
-        # 连通域标记
-        label_image = measure.label(mask_without_small)
-        #统计object个数
-        object_num = len(measure.regionprops(label_image))
-        boundingbox = list()
-        for region in measure.regionprops(label_image):  # 循环得到每一个连通域bbox
-            boundingbox.append(region.bbox)
-        return object_num, boundingbox
 def find995(casepaths):
-
-    #################################
-    # 随机挑选10例来统计0.995像素范围 #
-    ################################# 
+    '''
+    random choice 10 cases to cal 99.5% pixel range
+    '''
     
     casepaths_10 = random.sample(casepaths,10)
     count = np.zeros((500),dtype=np.float64)
@@ -57,7 +39,7 @@ def slice_ct():
     n_case = len(casepaths)
       
     # pixle995 = find995(casepaths)
-    pixle995 = 1470 #先前测过，这里就直接赋值了 
+    pixle995 = 1470 # for brats it's 1470 
 
     for i in tqdm(range(n_case),ncols=120,ascii=True):
         casename = casepaths[i].split('/')[-1]
@@ -69,18 +51,15 @@ def slice_ct():
         Label = sitk.ReadImage(glob(f'{casepaths[i]}/*seg*')[0], sitk.sitkUInt8)
         ArrayLabel = sitk.GetArrayFromImage(Label)
 
-        # # 将灰度值在阈值之外的截断
+        # clamp the pixel in [0,pixle995]
         ArrayImage[ArrayImage > pixle995] = pixle995
         # ArrayImage[ArrayImage < -200] = -200
         brain_mask = np.where(ArrayImage>0,1,0)
         brain_area = brain_mask.sum(axis=-1).sum(axis=-1)
-        # ######脑部区域归一化########
+        ###### standerize brain area ########
         brain_img = ArrayImage[ArrayImage>0]
         mean, std = np.mean(brain_img), np.std(brain_img, ddof=1)
         ArrayImage = (ArrayImage - mean)/ std * brain_mask
-
-        #合并肿瘤区域
-        # label_for_tumor = np.where(ArrayLabel>0,1,0)
         
         for n in range(len(ArrayImage)):
             if brain_area[n] > 0:
