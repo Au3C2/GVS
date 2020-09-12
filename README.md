@@ -3,7 +3,7 @@
  <img width=200px height=200px src="./data/imgs/brain.png" alt="Project logo"></a>
 </p>
 
-<h1 align="center"><font color="red">G</font>enerator <font color="red">V</font>ersus <font color="red">S</font>egmentor</h1>
+<h1 align="center"><strong>G</strong>enerator <strong>V</strong>ersus <strong>S</strong>egmentor</h1>
 
 <p align="center"> An implementation for <strong>Generator Versus Segmentor: Pseudo-healthy Synthesis</strong>
 </p>
