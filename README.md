@@ -87,13 +87,15 @@ opencv-python >= 4.3
 
 - Spetial thanks to [@milesial](https://github.com/milesial). Part of this work is based on [Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
 
-<!-- ## Citation
+## Citation
 We hope that you find this work useful. If you would like to acknowledge us, please, use the following citation:
 ```
-@inproceedings{,
-  title     = {Generator Versus Segmentor: Pseudo-healthy Synthesis},
-  author    = {Yunlong Zhang, Xin Lin, Yihong Zhuang},
-  booktitle = {},
-  year = {2020}
+@misc{yunlong2020generator,
+    title={Generator Versus Segmentor: Pseudo-healthy Synthesis},
+    author={Zhang Yunlong and Lin Xin and Sun Liyan and Zhuang Yihong and Huang Yue and Ding Xinghao and Liu Xiaoqing and Yu Yizhou},
+    year={2020},
+    eprint={2009.05722},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
 }
-``` -->
+```
