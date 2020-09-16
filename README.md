@@ -19,7 +19,7 @@
 ## 🧐 About <a name = "about"></a>
 
 This is an implementation for <strong>Generator Versus Segmentor: Pseudo-healthy Synthesis</strong>. 
-<!-- [[arXiv]](https://arxiv.org/abs/2005.08104) -->
+[[arXiv]](https://arxiv.org/abs/2009.05722)
 
 <p align="center" > <strong>Abstract</strong></p>
 
