@@ -92,7 +92,7 @@ We hope that you find this work useful. If you would like to acknowledge us, ple
 ```
 @misc{yunlong2020generator,
     title={Generator Versus Segmentor: Pseudo-healthy Synthesis},
-    author={Zhang Yunlong, Lin Xin, Sun Liyan},
+    author={Zhang Yunlong, Lin Xin, Sun Liyan, Zhuang Yihong},
     year={2020},
     eprint={2009.05722},
     archivePrefix={arXiv},
