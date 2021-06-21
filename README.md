@@ -26,7 +26,7 @@ This is an implementation for <strong>Generator Versus Segmentor: Pseudo-healthy
 <p align="justify">In this paper, we discuss the problems of style transfer and artifacts respectively. To address these problems, we consider the local differences between the lesions and normal tissue. To achieve this, we propose an adversarial process that alternatively trains a generator and a segmentor. The segmentor is trained to distinguish the synthetic lesions (i.e. the region in synthetic images corresponding to the lesions in the pathological ones) from the normal tissue, while the generator is trained to deceive the segmentor and preserve the normal tissue at the same time. Qualitative and quantitative experimental results on public datasets of BraTS and LiTS demonstrate that the proposed method outperforms state-oftheart methods by preserving the style and removing the artifacts.</p>
 
 
-<div align="center"><img src="./data/imgs/result2.jpg" width="75%"></div>
+<div align="center"><img src="./data/imgs/result.png" width="75%"></div>
 <div align="center"><img src="./data/imgs/result3.jpg" width="75%"></div>
 <!-- ![result](./data/imgs/result.jpg) -->
 
