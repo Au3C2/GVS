@@ -47,22 +47,33 @@ opencv-python >= 4.3
 ### File Tree
 
 ```
-│  predict_lits.py           # evaluate a model by some index, and extract images
-│  README.md                 # this file
-│  train_brats.py            # our main code, tarin our model on BraTS
-│
-├─unet
-│  │  unet_model.py          # store basic model
-│  │  unet_parts.py          # basic part of model
-│  
-└─utils
-    │  dataset.py            # dataloader
-    │  dice_loss.py          # calculate dice between two seg labels
-    │  init_logging.py       # initial a logger to write a log
-    │  ms_ssim.py            # calculate ms-ssim between two images
-    │  nii2npy_brats.py      # split .nii in to .npy to train 
-    │  split_cases_brats.py  # split cases into train/val/test set
-
+|  test.py            # evaluate a model by some index, and extract images
+|  README.md          # this file
+|  main.py            # our main code, tarin our model on BraTS
+|
+|-- chechpoints        
+   | pretrain.pth     # pretrined model
+|
+|-- data 
+   |--test_npy        # test examples
+   |  test_brats.txt  # text examples list
+   |  train_brats.txt # train examples list    
+|
+|-- Results
+   |--eval            # the pseudo-healthy images of test examples          
+|
+|-- unet
+   |  unet_model.py          # store basic model
+   |  unet_parts.py          # basic part of model
+   |  network.py             # baseci part of model
+|  
+|-- utils
+    |  dataset.py            # dataloader
+    |  dice_loss.py          # calculate dice between two seg labels
+    |  init_logging.py       # initial a logger to write a log
+    |  ms_ssim.py            # calculate ms-ssim between two images
+    |  nii2npy_brats.py      # split .nii in to .npy to train 
+    |- split_cases_brats.py  # split cases into train/val/test set
 ```
 
 ## 🎈 Usage <a name="usage"></a>
@@ -70,11 +81,8 @@ opencv-python >= 4.3
 
 * Prepare your LiTS/BraTS Dataset by following step:
   
-  * Download LiTS/BraTS Dataset to your harddrive
-  * Run ```./utils/nii2npy.py```to split into slices
-  * Run ```./utils/split_cases_brats.py``` to split slices into train/val/test set, and it will generrate a text like ```./data/train_brats.txt```
-* Then you can train you model by running ```train_brats.py```
-* You can evaluate your model by running ```predict_brats.py```
+  * train model by running ```main.py```
+  * evaluate model by running ```test.py```
 
 
 ## ✍️ Authors <a name = "authors"></a>
