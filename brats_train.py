@@ -1,24 +1,17 @@
 import argparse
-import logging
-import math
 import os
-import sys
 import time
 import traceback
 
-from brats_eval_baseline import eval_net
-from brats_predict import predict
 from torch import optim
 from torch.autograd import Variable
 from torch.nn import functional as F
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from unet.networks import define_G
 from unet.unet_model import *
 from utils.dataset import BrainDataset
-from utils.dice_loss import dice_coeff
-from utils.FocalLoss import FocalWithLogitsLoss
 from utils.init_logging import init_logging
 
 dir_checkpoint = 'checkpoints/'
@@ -55,7 +48,7 @@ def train_net(reconstucter,
         Learning rate:   {lr}
         λ:               {lambd}
         Training size:   {n_train}
-        Test size: {n_test}
+        Test size:       {n_test}
         Checkpoints:     {save_cp}
         Device:          {device.type}
         Training percent: {percent}
@@ -72,14 +65,10 @@ def train_net(reconstucter,
     ce_loss = nn.CrossEntropyLoss()
     ce_loss1 = nn.CrossEntropyLoss(reduce=False)
     mse_loss = nn.MSELoss(reduce=False)
-    best_dice = 0
     for epoch in range(epochs):
         reconstucter.train()
         segmenter.train()
-        loss1 = 0
-        loss2 = 0
-        loss3 = 0
-        loss4 = 0
+        loss1, loss2, loss3, loss4  = 0, 0, 0, 0
         logger.info("Epoch {:2d} learning(S) rate: {:.2e}, learning(R) rate: {:.2e}, ".format(
             epoch, optimizer_S.param_groups[0]['lr'], optimizer_R.param_groups[0]['lr']))
         bar = tqdm(enumerate(train_loader), total=n_train,
@@ -91,8 +80,6 @@ def train_net(reconstucter,
             seg_tumor = seg_tumor.to(device=device, dtype=torch.long)
             brain_mask = brain_mask.to(device=device, dtype=torch.float32)
 
-            if train_set.has_mean == True:
-                [mean, std] = data[6:8]
             if train_set.scale_seg:
                 seg_scale = data[8]
                 seg_tumor = seg_scale.to(device=device, dtype=torch.long)
@@ -198,13 +185,7 @@ if __name__ == '__main__':
 
     reconstucter = define_G(input_nc=1, output_nc=1,
                             ngf=64, netG='resnet_9blocks', norm='instance')
-    if args.arch == "Segmenter":
-        segmenter = Segmenter(n_channels=1, n_classes=2, bilinear=True)
-    elif args.arch == "Segmenter_3layer":
-        segmenter = Segmenter_3layer(n_channels=1, n_classes=2, bilinear=True)
-    else:
-        segmenter = Segmenter_32channel(
-            n_channels=1, n_classes=2, bilinear=True)
+    segmenter = Segmenter(n_channels=1, n_classes=2, bilinear=True)
 
     if args.load:
         segmenter.load_state_dict(

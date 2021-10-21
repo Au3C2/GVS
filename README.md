@@ -56,8 +56,8 @@ opencv-python >= 4.3
 |
 |-- data 
    |--test_npy        # test examples
-   |  test_brats.txt  # text examples list
-   |  train_brats.txt # train examples list    
+   |  brats_test_.txt  # text examples list
+   |  brats_train.txt # train examples list    
 |
 |-- Results
    |--eval            # the pseudo-healthy images of test examples          

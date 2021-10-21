@@ -1,5 +1,4 @@
 import argparse
-import logging
 import os
 import time
 
@@ -10,8 +9,6 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import prettytable as pt
-from dice_loss import dice_coeff
 from unet.unet_model import *
 from utils.dataset import BrainDataset
 from utils.init_logging import init_logging
