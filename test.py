@@ -1,13 +1,13 @@
 import argparse
 import os
 import time
-from unet.networks import define_G
 
 import cv2
 import numpy as np
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from unet.networks import define_G
 from unet.unet_model import *
 from utils.dataset import BrainDataset
 from utils.init_logging import init_logging
